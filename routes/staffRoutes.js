@@ -1,15 +1,11 @@
 const express = require('express');
-const {
-    addStaff,
-    getAllStaff,
-    updateStaff,
-    deleteStaff,
-} = require('../controllers/staffController');
+const { authenticate, authorize } = require('../controllers/authController');
+const { viewAllCourses, viewAllStudents } = require('../controllers/staffController');
+
 const router = express.Router();
 
-router.post('/', addStaff); // Add a new staff member
-router.get('/', getAllStaff); // Get all staff members
-router.put('/:id', updateStaff); // Update a staff member
-router.delete('/:id', deleteStaff); // Delete a staff member
+// Staff-only routes
+router.get('/courses', authenticate, authorize('staff'), viewAllCourses); // View all courses and registrations
+router.get('/students', authenticate, authorize('staff'), viewAllStudents); // View all students
 
 module.exports = router;
