@@ -1,24 +1,19 @@
 const jwt = require('jsonwebtoken');
-const SECRET_KEY = process.env.JWT_SECRET;
 
-const authenticate = (req, res, next) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
-    return res.status(401).json({ error: 'Access denied. No token provided.' });
-  }
+exports.authenticateToken = (req, res, next) => {
+  const token = req.header('Authorization');
+  if (!token) return res.status(401).json({ message: 'Access denied' });
 
-  const token = authHeader.split(' ')[1]; // Bearer <token>
-  if (!token) {
-    return res.status(401).json({ error: 'Access denied. Invalid token format.' });
-  }
-
-  try {
-    const decoded = jwt.verify(token, SECRET_KEY); // Verify the token
-    req.user = decoded; // Attach the decoded payload to the request
+  jwt.verify(token, process.env.JWT_SECRET, (err, user) => {
+    if (err) return res.status(403).json({ message: 'Invalid token' });
+    req.user = user;
     next();
-  } catch (err) {
-    return res.status(401).json({ error: 'Invalid or expired token.' });
-  }
+  });
 };
 
-module.exports = authenticate;
+exports.authorizeRole = (roles) => (req, res, next) => {
+  if (!roles.includes(req.user.role)) {
+    return res.status(403).json({ message: 'Permission denied' });
+  }
+  next();
+};

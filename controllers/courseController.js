@@ -1,45 +1,77 @@
 const Course = require('../models/Course');
+const Student = require('../models/Student');
 
-// Add a new course
-exports.addCourse = async (req, res) => {
-  try {
-    const { courseId, courseName, lecturer, creditPoints, maxStudents } = req.body;
-    const course = new Course({ courseId, courseName, lecturer, creditPoints, maxStudents, students: [] });
-    await course.save();
-    res.status(201).json({ message: 'Course added successfully', course });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to add course', details: error.message });
-  }
-};
-
-// Get all courses
 exports.getAllCourses = async (req, res) => {
   try {
     const courses = await Course.find();
-    res.status(200).json(courses);
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to retrieve courses', details: error.message });
+    res.json(courses);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
 
-// Update a course
-exports.updateCourse = async (req, res) => {
+exports.createCourse = async (req, res) => {
   try {
-    const course = await Course.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!course) return res.status(404).json({ error: 'Course not found' });
-    res.status(200).json({ message: 'Course updated successfully', course });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to update course', details: error.message });
+    const { courseId, courseName, lecturer, credits, maxStudents } = req.body;
+
+    // Validate credits range
+    if (credits < 3 || credits > 5) {
+      return res.status(400).json({ message: 'Credits must be between 3 and 5' });
+    }
+
+    const newCourse = new Course({ courseId, courseName, lecturer, credits, maxStudents });
+    await newCourse.save();
+    res.status(201).json(newCourse);
+  } catch (err) {
+    res.status(400).json({ error: err.message });
   }
 };
 
-// Delete a course
+exports.enrollStudent = async (req, res) => {
+  try {
+    const { courseId, studentId } = req.body;
+
+    const course = await Course.findById(courseId);
+    const student = await Student.findById(studentId);
+
+    if (!course || !student) {
+      return res.status(404).json({ message: 'Course or Student not found' });
+    }
+
+    // Check course capacity
+    if (course.enrolledStudents.length >= course.maxStudents) {
+      return res.status(400).json({ message: 'Course is full' });
+    }
+
+    // Check if student is already enrolled
+    if (course.enrolledStudents.includes(studentId)) {
+      return res.status(400).json({ message: 'Student already enrolled' });
+    }
+
+    // Enroll student
+    course.enrolledStudents.push(studentId);
+    await course.save();
+
+    // Add course to student's enrollments
+    student.enrolledCourses.push(courseId);
+    await student.save();
+
+    res.status(200).json({ message: 'Enrollment successful' });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
 exports.deleteCourse = async (req, res) => {
   try {
-    const course = await Course.findByIdAndDelete(req.params.id);
-    if (!course) return res.status(404).json({ error: 'Course not found' });
+    const { id } = req.params;
+
+    const course = await Course.findById(id);
+    if (!course) return res.status(404).json({ message: 'Course not found' });
+
+    await Course.findByIdAndDelete(id);
     res.status(200).json({ message: 'Course deleted successfully' });
-  } catch (error) {
-    res.status(500).json({ error: 'Failed to delete course', details: error.message });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };

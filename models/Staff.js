@@ -1,9 +1,9 @@
 const mongoose = require('mongoose');
 
 const staffSchema = new mongoose.Schema({
-  staffId: { type: String, required: true, unique: true }, // Unique identifier for the staff member
-  staffName: { type: String, required: true }, // Staff member's name
-  address: { type: String, required: true } // Staff member's address
+  staffId: { type: String, required: true, unique: true },
+  name: { type: String, required: true },
+  address: { type: String, required: true }
 });
 
-module.exports = mongoose.model('Staff', staffSchema);
+module.exports = mongoose.models.Staff || mongoose.model('Staff', staffSchema);

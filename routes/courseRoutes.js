@@ -1,16 +1,24 @@
 const express = require('express');
-const { authenticate, authorize } = require('../controllers/authController');
-const { addCourse, getAllCourses, updateCourse, deleteCourse, getCourseDetails } = require('../controllers/courseController');
+const {
+  getAllCourses,
+  createCourse,
+  enrollStudent,
+  deleteCourse
+} = require('../controllers/courseController');
+const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
 const router = express.Router();
 
-// Public route: Students and staff can view courses
-router.get('/', authenticate, getAllCourses);
+// Get all courses (accessible to all authenticated users)
+router.get('/', authenticateToken, getAllCourses);
 
-// Staff-only routes
-router.post('/', authenticate, authorize('staff'), addCourse); // Add a course
-router.put('/:id', authenticate, authorize('staff'), updateCourse); // Edit a course
-router.delete('/:id', authenticate, authorize('staff'), deleteCourse); // Delete a course
-router.get('/:id/details', authenticate, authorize('staff'), getCourseDetails); // View course registration details
+// Create a new course (Staff only)
+router.post('/', authenticateToken, authorizeRole(['Staff']), createCourse);
+
+// Enroll a student in a course (Students only)
+router.post('/enroll', authenticateToken, authorizeRole(['Student']), enrollStudent);
+
+// Delete a course (Staff only)
+router.delete('/:id', authenticateToken, authorizeRole(['Staff']), deleteCourse);
 
 module.exports = router;
