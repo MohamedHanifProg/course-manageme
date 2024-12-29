@@ -12,9 +12,8 @@ exports.login = async (req, res) => {
     const validPassword = await bcrypt.compare(password, user.password);
     if (!validPassword) return res.status(400).json({ message: 'Invalid username or password' });
 
-    // Include the role in the token payload
     const token = jwt.sign(
-      { id: user._id, role: user.role }, // Added role here
+      { id: user._id, role: user.role, referenceId: user.referenceId }, // Include referenceId
       process.env.JWT_SECRET,
       { expiresIn: '10m' }
     );
@@ -24,3 +23,4 @@ exports.login = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+

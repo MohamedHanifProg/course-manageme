@@ -3,12 +3,27 @@ const Student = require('../models/Student');
 
 exports.getAllCourses = async (req, res) => {
   try {
-    const courses = await Course.find();
-    res.json(courses);
+    if (req.user.role === 'Staff') {
+      // Staff sees all courses
+      const courses = await Course.find();
+      return res.json(courses);
+    } else if (req.user.role === 'Student') {
+      // Students see only their enrolled courses
+      const student = await Student.findById(req.user.referenceId).populate('enrolledCourses');
+      if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+      }
+      return res.json(student.enrolledCourses);
+    } else {
+      return res.status(403).json({ message: 'Permission denied' });
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
+
+
 
 exports.createCourse = async (req, res) => {
   try {
@@ -31,36 +46,39 @@ exports.enrollStudent = async (req, res) => {
   try {
     const { courseId, studentId } = req.body;
 
-    const course = await Course.findById(courseId);
-    const student = await Student.findById(studentId);
+    // Find the course by courseId
+    const course = await Course.findOne({ courseId });
+    // Find the student by studentId
+    const student = await Student.findOne({ studentId }).populate('enrolledCourses');
 
     if (!course || !student) {
       return res.status(404).json({ message: 'Course or Student not found' });
     }
 
-    // Check course capacity
+    // Check if the course is full
     if (course.enrolledStudents.length >= course.maxStudents) {
       return res.status(400).json({ message: 'Course is full' });
     }
 
-    // Check if student is already enrolled
-    if (course.enrolledStudents.includes(studentId)) {
+    // Check if the student is already enrolled
+    if (course.enrolledStudents.includes(student._id)) {
       return res.status(400).json({ message: 'Student already enrolled' });
     }
 
-    // Enroll student
-    course.enrolledStudents.push(studentId);
-    await course.save();
-
-    // Add course to student's enrollments
-    student.enrolledCourses.push(courseId);
+    // Add the course's _id to the student's enrolledCourses
+    student.enrolledCourses.push(course._id);
     await student.save();
+
+    // Add the student's _id to the course's enrolledStudents
+    course.enrolledStudents.push(student._id);
+    await course.save();
 
     res.status(200).json({ message: 'Enrollment successful' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 exports.deleteCourse = async (req, res) => {
   try {
