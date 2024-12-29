@@ -1,13 +1,12 @@
 const express = require('express');
-const { addStudent, 
-    getAllStudents, 
-    updateStudent,
-     deleteStudent } = require('../controllers/studentController');
+const { authenticate, authorize } = require('../controllers/authController');
+const { enrollCourse, dropCourse, getMyCourses } = require('../controllers/studentController');
+
 const router = express.Router();
 
-router.post('/', addStudent);
-router.get('/', getAllStudents);
-router.put('/:id', updateStudent);
-router.delete('/:id', deleteStudent);
+// Student-only routes
+router.post('/enroll', authenticate, authorize('student'), enrollCourse); // Enroll in a course
+router.delete('/drop/:id', authenticate, authorize('student'), dropCourse); // Drop a course
+router.get('/my-courses', authenticate, authorize('student'), getMyCourses); // View enrolled courses
 
 module.exports = router;
