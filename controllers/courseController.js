@@ -82,14 +82,17 @@ exports.enrollStudent = async (req, res) => {
 
 exports.deleteCourse = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { id } = req.params; // id here is the custom courseId
 
-    const course = await Course.findById(id);
-    if (!course) return res.status(404).json({ message: 'Course not found' });
+    // Find and delete the course by courseId instead of _id
+    const course = await Course.findOneAndDelete({ courseId: id });
+    if (!course) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
 
-    await Course.findByIdAndDelete(id);
     res.status(200).json({ message: 'Course deleted successfully' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
