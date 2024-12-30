@@ -149,56 +149,49 @@ exports.deleteCourse = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-// Update (swap) a student's course enrollment
 exports.updateEnrollment = async (req, res) => {
-  try {
-      const { oldCourseId, newCourseId } = req.body;
-      const student = await Student.findById(req.user.referenceId).populate('enrolledCourses');
+    const { oldCourseId, newCourseId } = req.body;
+    const student = await Student.findById(req.user.referenceId).populate('enrolledCourses');
 
-      if (!student) {
-          return res.status(404).json({ message: 'Student not found' });
-      }
+    if (!student) {
+        return res.status(404).json({ message: 'Student not found' });
+    }
 
-      const oldCourse = await Course.findOne({ courseId: oldCourseId });
-      const newCourse = await Course.findOne({ courseId: newCourseId });
+    const oldCourse = await Course.findOne({ courseId: oldCourseId });
+    const newCourse = await Course.findOne({ courseId: newCourseId });
 
-      if (!oldCourse || !newCourse) {
-          return res.status(404).json({ message: 'Course not found' });
-      }
+    if (!oldCourse || !newCourse) {
+        return res.status(404).json({ message: 'Course not found' });
+    }
 
-      // Ensure the student is enrolled in the old course
-      if (!student.enrolledCourses.some(c => c._id.equals(oldCourse._id))) {
-          return res.status(400).json({ message: 'Not enrolled in the old course' });
-      }
+    if (!student.enrolledCourses.some(c => c._id.equals(oldCourse._id))) {
+        return res.status(400).json({ message: 'Not enrolled in the old course' });
+    }
 
-      // Check if the new course is full
-      if (newCourse.enrolledStudents.length >= newCourse.maxStudents) {
-          return res.status(400).json({ message: 'New course is full' });
-      }
+    if (newCourse.enrolledStudents.length >= newCourse.maxStudents) {
+        return res.status(400).json({ message: 'New course is full' });
+    }
 
-      // Ensure the total credits stay within limit
-      const totalCredits = student.enrolledCourses.reduce((sum, course) => sum + course.credits, 0);
-      const newTotalCredits = totalCredits - oldCourse.credits + newCourse.credits;
-      if (newTotalCredits > 20) {
-          return res.status(400).json({ message: 'Exceeds maximum allowed credits (20)' });
-      }
+    const totalCredits = student.enrolledCourses.reduce((sum, course) => sum + course.credits, 0);
+    const newTotalCredits = totalCredits - oldCourse.credits + newCourse.credits;
 
-      // Swap the courses
-      student.enrolledCourses.pull(oldCourse._id);
-      student.enrolledCourses.push(newCourse._id);
+    if (newTotalCredits > 20) {
+        return res.status(400).json({ message: 'Exceeds maximum allowed credits (20)' });
+    }
 
-      oldCourse.enrolledStudents.pull(student._id);
-      newCourse.enrolledStudents.push(student._id);
+    student.enrolledCourses.pull(oldCourse._id);
+    student.enrolledCourses.push(newCourse._id);
 
-      await student.save();
-      await oldCourse.save();
-      await newCourse.save();
+    oldCourse.enrolledStudents.pull(student._id);
+    newCourse.enrolledStudents.push(student._id);
 
-      res.status(200).json({ message: 'Course swap successful' });
-  } catch (err) {
-      res.status(500).json({ error: err.message });
-  }
+    await student.save();
+    await oldCourse.save();
+    await newCourse.save();
+
+    res.status(200).json({ message: 'Course swap successful' });
 };
+
 exports.getCourseRegistrationStatus = async (req, res) => {
     try {
         const { id } = req.params;
