@@ -99,33 +99,40 @@ exports.enrollStudent = async (req, res) => {
     }
 };
 
-// Unenroll a student
+// Unenroll a student from a course
 exports.unenrollStudent = async (req, res) => {
-    try {
-        const { courseId } = req.body;
-        const student = await Student.findById(req.user.referenceId);
+  try {
+      const { id } = req.params; // Course ID from the URL parameter
+      const student = await Student.findById(req.user.referenceId);
 
-        if (!student) {
-            return res.status(404).json({ message: 'Student not found' });
-        }
+      if (!student) {
+          return res.status(404).json({ message: 'Student not found' });
+      }
 
-        const course = await Course.findOne({ courseId });
+      const course = await Course.findOne({ courseId: id });
 
-        if (!course) {
-            return res.status(404).json({ message: 'Course not found' });
-        }
+      if (!course) {
+          return res.status(404).json({ message: 'Course not found' });
+      }
 
-        student.enrolledCourses.pull(course._id);
-        course.enrolledStudents.pull(student._id);
+      // Ensure the student is enrolled in the course
+      if (!student.enrolledCourses.some(courseId => courseId.equals(course._id))) {
+          return res.status(400).json({ message: 'Student is not enrolled in this course' });
+      }
 
-        await student.save();
-        await course.save();
+      // Remove the student's enrollment in the course
+      student.enrolledCourses.pull(course._id);
+      course.enrolledStudents.pull(student._id);
 
-        res.status(200).json({ message: 'Unenrollment successful' });
-    } catch (err) {
-        res.status(500).json({ error: err.message });
-    }
+      await student.save();
+      await course.save();
+
+      res.status(200).json({ message: 'Unenrollment successful' });
+  } catch (err) {
+      res.status(500).json({ error: err.message });
+  }
 };
+
 
 // Delete a course
 exports.deleteCourse = async (req, res) => {
@@ -191,4 +198,38 @@ exports.updateEnrollment = async (req, res) => {
   } catch (err) {
       res.status(500).json({ error: err.message });
   }
+};
+exports.getCourseRegistrationStatus = async (req, res) => {
+    try {
+        const { id } = req.params;
+        console.log('Course ID received:', id, 'Type:', typeof id);
+
+        const numericId = Number(id);
+        console.log('Converted Course ID:', numericId);
+
+        const course = await Course.findOne({ courseId: numericId })
+            .populate('enrolledStudents', 'name studentId address year')
+            .catch(err => {
+                console.error('Database query failed:', err);
+                return null;
+            });
+
+        if (!course) {
+            console.log('No course found with ID:', numericId);
+            return res.status(404).json({ message: 'Course not found' });
+        }
+
+        console.log('Course found:', course);
+        res.status(200).json({
+            courseId: course.courseId,
+            courseName: course.courseName,
+            lecturer: course.lecturer,
+            maxStudents: course.maxStudents,
+            currentRegistrations: course.enrolledStudents.length,
+            enrolledStudents: course.enrolledStudents,
+        });
+    } catch (err) {
+        console.error('Error in getCourseRegistrationStatus:', err);
+        res.status(500).json({ error: err.message });
+    }
 };

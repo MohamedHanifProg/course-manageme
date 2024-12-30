@@ -6,7 +6,8 @@ const {
     unenrollStudent,
     deleteCourse,
     updateCourse,
-    updateEnrollment
+     updateEnrollment,
+     getCourseRegistrationStatus
 } = require('../controllers/courseController');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
@@ -22,7 +23,8 @@ router.post('/', authenticateToken, authorizeRole(['Staff']), createCourse);
 router.post('/enroll', authenticateToken, authorizeRole(['Student']), enrollStudent);
 
 // Unenroll a student from a course (Students only)
-router.delete('/unenroll', authenticateToken, authorizeRole(['Student']), unenrollStudent);
+router.delete('/unenroll/:id', authenticateToken, authorizeRole(['Student']), unenrollStudent);
+
 
 // Update a course (Staff only)
 router.put('/:id', authenticateToken, authorizeRole(['Staff']), updateCourse);
@@ -32,6 +34,9 @@ router.delete('/:id', authenticateToken, authorizeRole(['Staff']), deleteCourse)
 
 // Update (swap) a student's course enrollment (Students only)
 router.put('/swap', authenticateToken, authorizeRole(['Student']), updateEnrollment);
+
+router.get('/status/:id', authenticateToken, authorizeRole(['Staff']), getCourseRegistrationStatus);
+
 
 
 module.exports = router;
