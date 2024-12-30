@@ -3,7 +3,8 @@ const {
   getAllCourses,
   createCourse,
   enrollStudent,
-  deleteCourse
+  deleteCourse,
+  updateCourse, // Import the updateCourse controller
 } = require('../controllers/courseController');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
 
@@ -17,6 +18,9 @@ router.post('/', authenticateToken, authorizeRole(['Staff']), createCourse);
 
 // Enroll a student in a course (Students only)
 router.post('/enroll', authenticateToken, authorizeRole(['Student']), enrollStudent);
+
+// Update a course (Staff only)
+router.put('/:id', authenticateToken, authorizeRole(['Staff']), updateCourse);
 
 // Delete a course (Staff only)
 router.delete('/:id', authenticateToken, authorizeRole(['Staff']), deleteCourse);

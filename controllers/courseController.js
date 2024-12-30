@@ -41,6 +41,32 @@ exports.createCourse = async (req, res) => {
     res.status(400).json({ error: err.message });
   }
 };
+exports.updateCourse = async (req, res) => {
+  try {
+    const { id } = req.params; // 'id' here will refer to the courseId
+    const updatedCourse = await Course.findOneAndUpdate(
+      { courseId: id }, // Query by courseId instead of _id
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updatedCourse) {
+      return res.status(404).json({ message: 'Course not found' });
+    }
+
+    res.status(200).json({
+      message: 'Course updated successfully',
+      course: updatedCourse,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+
 
 exports.enrollStudent = async (req, res) => {
   try {
