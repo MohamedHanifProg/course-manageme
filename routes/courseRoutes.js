@@ -25,14 +25,14 @@ router.post('/enroll', authenticateToken, authorizeRole(['Student']), enrollStud
 // Unenroll a student from a course (Students only)
 router.delete('/unenroll/:id', authenticateToken, authorizeRole(['Student']), unenrollStudent);
 
-
+router.put('/swap', authenticateToken, authorizeRole(['Student']), updateEnrollment);
 // Update a course (Staff only)
 router.put('/:id', authenticateToken, authorizeRole(['Staff']), updateCourse);
 
 // Delete a course (Staff only)
 router.delete('/:id', authenticateToken, authorizeRole(['Staff']), deleteCourse);
 
-router.put('/swap', authenticateToken, authorizeRole(['Student']), updateEnrollment);
+
 
 router.get('/status/:id', authenticateToken, authorizeRole(['Staff']), getCourseRegistrationStatus);
 
