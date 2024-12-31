@@ -32,10 +32,6 @@ router.put('/:id', authenticateToken, authorizeRole(['Staff']), updateCourse);
 // Delete a course (Staff only)
 router.delete('/:id', authenticateToken, authorizeRole(['Staff']), deleteCourse);
 
-
-
 router.get('/status/:id', authenticateToken, authorizeRole(['Staff']), getCourseRegistrationStatus);
-
-
 
 module.exports = router;
