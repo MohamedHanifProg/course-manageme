@@ -6,5 +6,4 @@ const staffSchema = new mongoose.Schema({
   address: { type: String, required: true }
 });
 
-// Explicitly map to "staff-collection"
 module.exports = mongoose.model('Staff', staffSchema, 'staff-collection');

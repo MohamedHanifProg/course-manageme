@@ -1,7 +1,5 @@
 const Course = require('../models/Course');
 const Student = require('../models/Student');
-
-// Get all courses
 exports.getAllCourses = async (req, res) => {
     try {
         if (req.user.role === 'Staff') {
@@ -20,16 +18,12 @@ exports.getAllCourses = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
-// Create a course
 exports.createCourse = async (req, res) => {
     try {
         const { courseId, courseName, lecturer, credits, maxStudents } = req.body;
-
         if (credits < 3 || credits > 5) {
             return res.status(400).json({ message: 'Credits must be between 3 and 5' });
         }
-
         const newCourse = new Course({ courseId, courseName, lecturer, credits, maxStudents });
         await newCourse.save();
         res.status(201).json(newCourse);
@@ -37,8 +31,6 @@ exports.createCourse = async (req, res) => {
         res.status(400).json({ error: err.message });
     }
 };
-
-// Update a course
 exports.updateCourse = async (req, res) => {
     try {
         const { id } = req.params;
@@ -47,18 +39,14 @@ exports.updateCourse = async (req, res) => {
             req.body,
             { new: true, runValidators: true }
         );
-
         if (!updatedCourse) {
             return res.status(404).json({ message: 'Course not found' });
         }
-
         res.status(200).json({ message: 'Course updated successfully', course: updatedCourse });
     } catch (err) {
         res.status(500).json({ error: err.message });
     }
 };
-
-// Enroll a student
 exports.enrollStudent = async (req, res) => {
     try {
         const { courseId } = req.body;
@@ -98,11 +86,9 @@ exports.enrollStudent = async (req, res) => {
         res.status(500).json({ error: err.message });
     }
 };
-
-// Unenroll a student from a course
 exports.unenrollStudent = async (req, res) => {
   try {
-      const { id } = req.params; // Course ID from the URL parameter
+      const { id } = req.params; 
       const student = await Student.findById(req.user.referenceId);
 
       if (!student) {
@@ -115,26 +101,18 @@ exports.unenrollStudent = async (req, res) => {
           return res.status(404).json({ message: 'Course not found' });
       }
 
-      // Ensure the student is enrolled in the course
       if (!student.enrolledCourses.some(courseId => courseId.equals(course._id))) {
           return res.status(400).json({ message: 'Student is not enrolled in this course' });
       }
-
-      // Remove the student's enrollment in the course
       student.enrolledCourses.pull(course._id);
       course.enrolledStudents.pull(student._id);
-
       await student.save();
       await course.save();
-
       res.status(200).json({ message: 'Unenrollment successful' });
   } catch (err) {
       res.status(500).json({ error: err.message });
   }
 };
-
-
-// Delete a course
 exports.deleteCourse = async (req, res) => {
     try {
         const { id } = req.params;
@@ -191,7 +169,6 @@ exports.updateEnrollment = async (req, res) => {
 
     res.status(200).json({ message: 'Course swap successful' });
 };
-
 exports.getCourseRegistrationStatus = async (req, res) => {
     try {
         const { id } = req.params;
