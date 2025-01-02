@@ -6,5 +6,4 @@ const studentSchema = new mongoose.Schema({
   year: { type: Number, required: true },
   enrolledCourses: { type: [mongoose.Schema.Types.ObjectId], ref: 'Course', default: [] }
 });
-
 module.exports = mongoose.model('Student', studentSchema, 'students');

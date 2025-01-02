@@ -4,6 +4,5 @@ const studentSchema = {
     address: { in: ['body'], isString: true, notEmpty: true, errorMessage: 'Address is required.' },
     academicYear: { in: ['body'], isInt: true, errorMessage: 'Academic year must be an integer.' },
   };
-  
   module.exports = studentSchema;
   

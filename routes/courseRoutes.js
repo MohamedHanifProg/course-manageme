@@ -10,7 +10,6 @@ const {
      getCourseRegistrationStatus
 } = require('../controllers/courseController');
 const { authenticateToken, authorizeRole } = require('../middleware/auth');
-
 const router = express.Router();
 router.get('/', authenticateToken, getAllCourses);
 router.post('/', authenticateToken, authorizeRole(['Staff']), createCourse);
@@ -20,5 +19,4 @@ router.put('/swap', authenticateToken, authorizeRole(['Student']), updateEnrollm
 router.put('/:id', authenticateToken, authorizeRole(['Staff']), updateCourse);
 router.delete('/:id', authenticateToken, authorizeRole(['Staff']), deleteCourse);
 router.get('/status/:id', authenticateToken, authorizeRole(['Staff']), getCourseRegistrationStatus);
-
 module.exports = router;
